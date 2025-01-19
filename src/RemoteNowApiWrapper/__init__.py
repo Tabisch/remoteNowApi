@@ -17,12 +17,15 @@ class RemoteNowApi:
         self._on_channelListInfo: Union[Callable, None] = None
         self._on_channelList: Union[Callable, None] = None
         self._on_state: Union[Callable, None] = None
+        self._on_sourceinsert: Union[Callable, None] = None
+        self._on_volumeChange: Union[Callable, None] = None
 
         # command Topics
         self._getTVStateTopic = f"{self.uiServiceBase}/{self.identifer}/actions/gettvstate"
         self._sendAuthenticationCodeTopic = f"{self.uiServiceBase}/{self.identifer}/actions/authenticationcode"
         self._changeSourceTopic = f"{self.uiServiceBase}/{self.identifer}/actions/changesource"
         self._changeChannelTopic = f"{self.uiServiceBase}/{self.identifer}/actions/changechannel"
+        self._changeVolumeTopic = f"{self.platformServiceBase}/{self.identifer}/actions/changevolume"
         self._getSourceList = f"{self.uiServiceBase}/{self.identifer}/actions/sourcelist"
         self._getCapabilityTopic = f"{self.uiServiceBase}/{self.identifer}/actions/capability"
         self._getTvInfoTopic = f"{self.platformServiceBase}/{self.identifer}/actions/gettvinfo"
@@ -36,6 +39,8 @@ class RemoteNowApi:
         self._channelListInfoTopic = f"{self.mobileBase}/{self.identifer}/platform_service/data/getchannellistinfo"
         self._channelListTopic = f"{self.mobileBase}/{self.identifer}/platform_service/data/channellist"
         self._stateTopic = "/remoteapp/mobile/broadcast/ui_service/state"
+        self._sourceInsertTopic = "/remoteapp/mobile/broadcast/platform_service/actions/sourceinsert"
+        self._volumeChangeTopic = "/remoteapp/mobile/broadcast/platform_service/actions/volumechange"
 
         self._mqttc = mqtt.Client(
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
@@ -98,6 +103,13 @@ class RemoteNowApi:
 
         self.publish(mqttTopic=mqttTopic, payload=json.dumps(payload))
 
+    # change volume
+    def changeVolume(self, percentage):
+        mqttTopic = self._changeVolumeTopic
+        payload = percentage
+
+        self.publish(mqttTopic=mqttTopic, payload=json.dumps(payload))
+
     # request sourcelist
     def getSourceList(self):
         mqttTopic = self._getSourceList
@@ -145,12 +157,14 @@ class RemoteNowApi:
         client.subscribe(self._channelListInfoTopic)
         client.subscribe(self._channelListTopic)
         client.subscribe(self._stateTopic)
+        client.subscribe(self._sourceInsertTopic)
+        client.subscribe(self._volumeChangeTopic)
 
     # The callback for when a PUBLISH message is received from the server.
     def on_message(self, client, userdata, msg):
         print(msg.topic)
         payload = json.loads(msg.payload)
-        
+
         match msg.topic:
             case self._SourceListTopic:
                 return self.handle_on_SourceList(payload)
@@ -164,6 +178,10 @@ class RemoteNowApi:
                 return self.handle_on_channelList(payload)
             case self._stateTopic:
                 return self.handle_on_state(payload)
+            case self._sourceInsertTopic:
+                return self.handle_on_sourceinsert(payload)
+            case self._volumeChangeTopic:
+                return self.handle_on_volumeChange(payload)
 
     # SourceList
     def register_handle_on_SourceList(self, func: Callable):
@@ -212,3 +230,19 @@ class RemoteNowApi:
     def handle_on_state(self, payload):
         if self._on_state:
             self._on_state(payload)
+
+    # Source Change
+    def register_handle_on_sourceinsert(self, func: Callable):
+        self._on_sourceinsert = func
+
+    def handle_on_sourceinsert(self, payload):
+        if self._on_sourceinsert:
+            self._on_sourceinsert(payload)
+
+    # volume Change
+    def register_handle_on_volumeChange(self, func: Callable):
+        self._on_volumeChange = func
+
+    def handle_on_volumeChange(self, payload):
+        if self._on_volumeChange:
+            self._on_volumeChange(payload)
