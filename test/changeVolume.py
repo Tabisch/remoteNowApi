@@ -13,8 +13,6 @@ async def main():
 
     await asyncio.sleep(5)
 
-    api.getCapability()
-
     while True:
         await asyncio.sleep(5)
         api.changeVolume(volume)

@@ -56,9 +56,10 @@ class RemoteNowApi:
 
         self._mqttc.on_connect = self.on_connect
         self._mqttc.on_message = self.on_message
+        self._mqttc.on_disconnect = self.on_disconnect
 
     def publish(self, mqttTopic, payload):
-        print(mqttTopic)
+        print(f"Send: {mqttTopic}")
 
         if payload == "":
             self._mqttc.publish(topic=mqttTopic)
@@ -160,9 +161,11 @@ class RemoteNowApi:
         client.subscribe(self._sourceInsertTopic)
         client.subscribe(self._volumeChangeTopic)
 
+        self.getCapability()
+
     # The callback for when a PUBLISH message is received from the server.
     def on_message(self, client, userdata, msg):
-        print(msg.topic)
+        print(f"Receive: {msg.topic}")
         payload = json.loads(msg.payload)
 
         match msg.topic:
@@ -182,6 +185,10 @@ class RemoteNowApi:
                 return self.handle_on_sourceinsert(payload)
             case self._volumeChangeTopic:
                 return self.handle_on_volumeChange(payload)
+            
+    # Handle TV disconnect
+    def on_disconnect(self, client, userdata, reason_code, properties, rc):
+        print("disconnected")
 
     # SourceList
     def register_handle_on_SourceList(self, func: Callable):

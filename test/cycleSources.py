@@ -12,6 +12,7 @@ async def main():
     api = RemoteNowApi(hostname="192.168.200.60", identifer="devtest")
 
     api.register_handle_on_SourceList(storeSources)
+    api.register_handle_on_sourceinsert(printPayload)
 
     api.connect()
 
@@ -29,5 +30,8 @@ def storeSources(payload):
     global sources
     sources = payload
     print(sources)
+
+def printPayload(payload):
+    print(payload)
 
 asyncio.run(main())

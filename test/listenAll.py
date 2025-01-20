@@ -20,10 +20,6 @@ async def main():
 
     api.connect()
 
-    await asyncio.sleep(5)
-
-    api.getTvInfo()
-
     while True:
         await asyncio.sleep(5)
 
