@@ -1,6 +1,7 @@
 from typing import Callable, Union
 import paho.mqtt.client as mqtt
 import json
+import os
 
 class RemoteNowApi:
     uiServiceBase = "/remoteapp/tv/ui_service"
@@ -8,8 +9,13 @@ class RemoteNowApi:
     mobileBase = "/remoteapp/mobile"
 
     def __init__(self, hostname, identifer="remoteNowApiWrapper"):
+        path = os.path.abspath(__file__)
+        dir_path = os.path.dirname(path)
+        certPath = f"{dir_path}/hisense.cert"
+
         self._hostname = hostname
         self.identifer = identifer
+        self._connected = False
 
         self._on_SourceList: Union[Callable, None] = None
         self._on_capability: Union[Callable, None] = None
@@ -50,7 +56,7 @@ class RemoteNowApi:
 
         self._mqttc.username_pw_set(username="hisenseservice", password="multimqttservice")
         self._mqttc.tls_set(
-            ca_certs="hisense.cert"
+            ca_certs=certPath
             )
         self._mqttc.tls_insecure_set(True)
 
@@ -163,6 +169,8 @@ class RemoteNowApi:
 
         self.getCapability()
 
+        self._connected = True
+
     # The callback for when a PUBLISH message is received from the server.
     def on_message(self, client, userdata, msg):
         print(f"Receive: {msg.topic}")
@@ -189,6 +197,10 @@ class RemoteNowApi:
     # Handle TV disconnect
     def on_disconnect(self, client, userdata, reason_code, properties, rc):
         print("disconnected")
+        self._connected = False
+
+    def get_Connected(self):
+        return self._connected
 
     # SourceList
     def register_handle_on_SourceList(self, func: Callable):
