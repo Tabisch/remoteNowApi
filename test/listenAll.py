@@ -18,10 +18,14 @@ async def main():
     api.register_handle_on_sourceinsert(printPayload)
     api.register_handle_on_volumeChange(printPayload)
 
+    print(api.get_Connected())
+
     api.connect()
 
     while True:
         await asyncio.sleep(5)
+
+        print(api.get_Connected())
 
 def printPayload(payload):
     print(payload)
