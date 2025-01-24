@@ -16,6 +16,13 @@ async def main():
         await asyncio.sleep(5)
 
     print(api.getVendor())
+    print(api.getBoardVersion())
+    print(api.getProduceDate())
+    print(api.getUniqueDeviceId())
+    print(api.getSoftwareVersion())
+    print(api.getChipplatform())
+    print(api.getDevicemsg())
+
 
 def printPayload(payload):
     print(payload)
