@@ -6,6 +6,7 @@ import os
 class RemoteNowApi:
     uiServiceBase = "/remoteapp/tv/ui_service"
     platformServiceBase = "/remoteapp/tv/platform_service"
+    remoteServiceBase = "/remoteapp/tv/remote_service"
     mobileBase = "/remoteapp/mobile"
 
     def __init__(self, hostname, identifer="remoteNowApiWrapper"):
@@ -46,6 +47,7 @@ class RemoteNowApi:
         self._getTvInfoTopic = f"{self.platformServiceBase}/{self.identifer}/actions/gettvinfo"
         self._getChannelListInfoTopic = f"{self.platformServiceBase}/{self.identifer}/actions/getchannellistinfo"
         self._getChannelListTopic = f"{self.platformServiceBase}/{self.identifer}/actions/channellist"
+        self._sendkeyTopic = f"{self.remoteServiceBase}/{self.identifer}/actions/sendkey"
 
         # information Topics
         self._SourceListTopic = f"{self.mobileBase}/{self.identifer}/ui_service/data/sourcelist"
@@ -146,6 +148,12 @@ class RemoteNowApi:
         payload = percentage
 
         self.publish(mqttTopic=mqttTopic, payload=json.dumps(payload))
+
+    def sendKey(self, key):
+        mqttTopic = self._sendkeyTopic
+        payload=key
+
+        self.publish(mqttTopic=mqttTopic, payload=payload)
 
     # request sourcelist
     def getSourceList(self):
