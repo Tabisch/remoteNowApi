@@ -17,6 +17,15 @@ class RemoteNowApi:
         self.identifer = identifer
         self._connected = False
 
+        #system info
+        self._vendorBrand = None
+        self._boardVersion = None
+        self._produceDate = None
+        self._uniqueDeviceId = None
+        self._softwareVersion = None
+        self._chipplatform = None
+        self._devicemsg = None
+
         self._on_SourceList: Union[Callable, None] = None
         self._on_capability: Union[Callable, None] = None
         self._on_tvInfo: Union[Callable, None] = None
@@ -77,6 +86,27 @@ class RemoteNowApi:
         print("connection")
         self._mqttc.connect_async(self._hostname, 36669, 60)
         self._mqttc.loop_start()
+
+    def getVendor(self):
+        return self._vendorBrand
+    
+    def getBoardVersion(self):
+        return self._boardVersion
+    
+    def getProduceDate(self):
+        return self._produceDate
+    
+    def getUniqueDeviceId(self):
+        return self._uniqueDeviceId
+    
+    def getSoftwareVersion(self):
+        return self._softwareVersion
+    
+    def getChipplatform(self):
+        return self._chipplatform
+    
+    def getDevicemsg(self):
+        return self._devicemsg
 
     # request authcode
     def getAuthCode(self):
@@ -200,6 +230,9 @@ class RemoteNowApi:
         self._connected = False
 
     def get_Connected(self):
+        if self._vendorBrand is None:
+            return False
+
         return self._connected
 
     # SourceList
@@ -215,6 +248,14 @@ class RemoteNowApi:
         self._on_capability = func
 
     def handle_on_capability(self, payload):
+        self._vendorBrand = payload["vendorBrand"]
+        self._boardVersion = payload["boardVersion"]
+        self._produceDate = payload["produceDate"]
+        self._uniqueDeviceId = payload["uniqueDeviceId"]
+        self._softwareVersion = payload["softwareVersion"]
+        self._chipplatform = payload["chipplatform"]
+        self._devicemsg = payload["devicemsg"]
+
         if self._on_capability:
             self._on_capability(payload)
 
