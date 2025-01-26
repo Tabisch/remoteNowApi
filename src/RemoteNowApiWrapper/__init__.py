@@ -1,4 +1,4 @@
-from typing import Callable, Union
+from typing import Callable
 import paho.mqtt.client as mqtt
 import json
 import os
@@ -18,6 +18,7 @@ class RemoteNowApi:
         self._hostname = hostname
         self.identifer = identifer
         self._connected = False
+        self._currentSource = None
 
         # system info
         self._vendorBrand = None
@@ -28,6 +29,7 @@ class RemoteNowApi:
         self._chipplatform = None
         self._devicemsg = None
 
+        # callbacks
         self._on_SourceList = []
         self._on_capability = []
         self._on_tvInfo = []
@@ -243,6 +245,8 @@ class RemoteNowApi:
         client.subscribe(self._volumeChangeTopic)
 
         self.getCapability()
+        self.getTvState()
+        self.getTvInfo()
 
         self.handle_on_connected()
 
@@ -337,6 +341,8 @@ class RemoteNowApi:
         self._on_state.append(func)
 
     def handle_on_state(self, payload):
+        self._currentSource = payload
+
         for func in self._on_state:
             func(payload)
 
