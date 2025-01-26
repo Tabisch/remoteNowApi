@@ -7,7 +7,7 @@ async def main():
 
     api = RemoteNowApi(hostname="192.168.200.60", identifer="devtest")
 
-    api.registerhandle_on_channelListInfo(printPayload)
+    api.register_handle_on_channelListInfo(printPayload)
 
     api.connect()
 
