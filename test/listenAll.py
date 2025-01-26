@@ -17,17 +17,21 @@ async def main():
     api.register_handle_on_tvInfo(printPayload)
     api.register_handle_on_sourceinsert(printPayload)
     api.register_handle_on_volumeChange(printPayload)
-
-    print(api.get_Connected())
+    api.register_handle_on_connected(printConnected)
+    api.register_handle_on_disconnected(printDisconnected)
 
     api.connect()
 
     while True:
         await asyncio.sleep(5)
 
-        print(api.get_Connected())
-
 def printPayload(payload):
     print(payload)
+
+def printConnected():
+    print("Connected")
+
+def printDisconnected():
+    print("Disconnected")
 
 asyncio.run(main())
