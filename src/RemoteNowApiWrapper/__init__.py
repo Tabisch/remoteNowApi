@@ -309,7 +309,7 @@ class RemoteNowApi:
         self._chipplatform = payload["chipplatform"]
         self._devicemsg = payload["devicemsg"]
 
-        for func in self._on_volumeChange:
+        for func in self._on_capability:
             func(payload)
 
     # TvInfo
