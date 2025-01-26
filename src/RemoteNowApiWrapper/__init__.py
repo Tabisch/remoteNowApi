@@ -276,7 +276,7 @@ class RemoteNowApi:
         #print("disconnected")
         self._connected = False
 
-        self.handle_on_disconnected()()
+        self.handle_on_disconnected()
 
     def get_Connected(self):
         if self._vendorBrand is None:
