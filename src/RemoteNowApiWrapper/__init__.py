@@ -18,7 +18,7 @@ class RemoteNowApi:
         self._hostname = hostname
         self.identifer = identifer
         self._connected = False
-        self._currentSource = None
+        self._channelListInfo = None
 
         # system info
         self._vendorBrand = None
@@ -115,16 +115,16 @@ class RemoteNowApi:
         self._mqttc.on_disconnect = self.on_disconnect
 
     def publish(self, mqttTopic, payload):
-        #print(f"Send: {mqttTopic}")
+        # print(f"Send: {mqttTopic}")
 
         if payload == "":
             self._mqttc.publish(topic=mqttTopic)
         else:
-            #print(payload)
+            # print(payload)
             self._mqttc.publish(topic=mqttTopic, payload=payload)
 
     def connect(self):
-        #print("connection")
+        # print("connection")
         self._mqttc.connect_async(self._hostname, 36669, 60)
         self._mqttc.loop_start()
 
@@ -223,18 +223,26 @@ class RemoteNowApi:
         self.publish(mqttTopic=mqttTopic, payload=payload)
 
     # request channellist
-    def getChannelList(self, list_para, list_name):
+    def getChannelList(self, list_para=None, list_name=None):
         mqttTopic = self._getChannelListTopic
-        payload = {
-            "list_para": f"{list_para}",
-            "list_name": f"{list_name}",
-        }
+        payload = {}
+
+        if list_para and list_name:
+            payload = {
+                "list_para": f"{list_para}",
+                "list_name": f"{list_name}",
+            }
+        else:
+            payload = {
+                "list_para": f"{self._channelListInfo["list_para"]}",
+                "list_name": f"{self._channelListInfo["list_name"]}",
+            }
 
         self.publish(mqttTopic=mqttTopic, payload=json.dumps(payload))
 
     # The callback for when the client receives a CONNACK response from the server.
     def on_connect(self, client, userdata, flags, reason_code, properties):
-        #print(f"Connected with result code {reason_code}")
+        # print(f"Connected with result code {reason_code}")
         client.subscribe(self._SourceListTopic)
         client.subscribe(self._capabilityTopic)
         client.subscribe(self._tvInfoTopic)
@@ -247,6 +255,7 @@ class RemoteNowApi:
         self.getCapability()
         self.getTvState()
         self.getTvInfo()
+        self.getChannelListInfo()
 
         self.handle_on_connected()
 
@@ -254,7 +263,7 @@ class RemoteNowApi:
 
     # The callback for when a PUBLISH message is received from the server.
     def on_message(self, client, userdata, msg):
-        #print(f"Receive: {msg.topic}")
+        # print(f"Receive: {msg.topic}")
         payload = json.loads(msg.payload)
 
         match msg.topic:
@@ -277,7 +286,7 @@ class RemoteNowApi:
 
     # Handle TV disconnect
     def on_disconnect(self, client, userdata, reason_code, properties, rc):
-        #print("disconnected")
+        # print("disconnected")
         self._connected = False
 
         self.handle_on_disconnected()
@@ -325,6 +334,8 @@ class RemoteNowApi:
         self._on_channelListInfo.append(func)
 
     def handle_on_channelListInfo(self, payload):
+        self._channelListInfo = payload[0]
+
         for func in self._on_channelListInfo:
             func(payload)
 
@@ -341,8 +352,6 @@ class RemoteNowApi:
         self._on_state.append(func)
 
     def handle_on_state(self, payload):
-        self._currentSource = payload
-
         for func in self._on_state:
             func(payload)
 
