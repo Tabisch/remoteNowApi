@@ -128,6 +128,9 @@ class RemoteNowApi:
         self._mqttc.connect_async(self._hostname, 36669, 60)
         self._mqttc.loop_start()
 
+    def disconnect(self):
+        self._mqttc.disconnect()
+
     def getVendor(self):
         return self._vendorBrand
 

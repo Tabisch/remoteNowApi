@@ -19,11 +19,7 @@ async def main():
     print("Enter AuthCode")
     api.sendAuthenticationCode(authCode=input())
 
-    # api.getCapability()
-
     while True:
-        api.changeSource(sourceId=sourceid)
-        sourceid = sourceid + 1
         await asyncio.sleep(5)
 
 
