@@ -3,7 +3,6 @@ import paho.mqtt.client as mqtt
 import json
 import os
 
-
 class RemoteNowApi:
     uiServiceBase = "/remoteapp/tv/ui_service"
     platformServiceBase = "/remoteapp/tv/platform_service"
@@ -97,6 +96,7 @@ class RemoteNowApi:
         self._volumeChangeTopic = (
             "/remoteapp/mobile/broadcast/platform_service/actions/volumechange"
         )
+        self._initSuccessTopic = "/remoteapp/mobile/broadcast/ui_service/actions/initsuccess"
 
         self._mqttc = mqtt.Client(
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
@@ -243,9 +243,16 @@ class RemoteNowApi:
 
         self.publish(mqttTopic=mqttTopic, payload=json.dumps(payload))
 
+    def populateInfo(self):
+        self.getCapability()
+        self.getTvState()
+        self.getTvInfo()
+        self.getChannelListInfo()
+
     # The callback for when the client receives a CONNACK response from the server.
     def on_connect(self, client, userdata, flags, reason_code, properties):
         # print(f"Connected with result code {reason_code}")
+        client.subscribe(self._initSuccessTopic)
         client.subscribe(self._SourceListTopic)
         client.subscribe(self._capabilityTopic)
         client.subscribe(self._tvInfoTopic)
@@ -255,14 +262,7 @@ class RemoteNowApi:
         client.subscribe(self._sourceInsertTopic)
         client.subscribe(self._volumeChangeTopic)
 
-        self.getCapability()
-        self.getTvState()
-        self.getTvInfo()
-        self.getChannelListInfo()
-
-        self.handle_on_connected()
-
-        self._connected = True
+        self.populateInfo()
 
     # The callback for when a PUBLISH message is received from the server.
     def on_message(self, client, userdata, msg):
@@ -286,6 +286,8 @@ class RemoteNowApi:
                 return self.handle_on_sourceinsert(payload)
             case self._volumeChangeTopic:
                 return self.handle_on_volumeChange(payload)
+            case self._initSuccessTopic:
+                return self.handle_initSuccess()
 
     # Handle TV disconnect
     def on_disconnect(self, client, userdata, reason_code, properties, rc):
@@ -294,7 +296,16 @@ class RemoteNowApi:
 
         self.handle_on_disconnected()
 
+    def handle_initSuccess(self):
+        self.populateInfo()
+
     def get_Connected(self):
+        if self._vendorBrand is None:
+            return False
+
+        return self._connected
+    
+    async def async_get_Connected(self):
         if self._vendorBrand is None:
             return False
 
@@ -320,6 +331,10 @@ class RemoteNowApi:
         self._softwareVersion = payload["softwareVersion"]
         self._chipplatform = payload["chipplatform"]
         self._devicemsg = payload["devicemsg"]
+
+        self.handle_on_connected()
+
+        self._connected = True
 
         for func in self._on_capability:
             func(payload)
